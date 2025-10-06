@@ -6,17 +6,22 @@ import { useNavigate, Link } from 'react-router-dom';
 
 /**
  * PUBLIC_INTERFACE
- * Login scaffold. Uses AuthContext to simulate login and persist token.
+ * Login form integrates with AuthContext.login which calls the API.
  */
 export default function Login() {
   const [email, setEmail] = useState('');
-  const { login } = useAuth();
+  const [password, setPassword] = useState('');
+  const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    login({ token: 'mock-token', user: { email } });
-    navigate('/dashboard');
+    try {
+      await login({ email, password });
+      navigate('/dashboard');
+    } catch {
+      // error handled in context; no-op
+    }
   };
 
   return (
@@ -24,14 +29,15 @@ export default function Login() {
       <form onSubmit={onSubmit}>
         <div className="section">
           <label>Email</label>
-          <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
+          <input className="input" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
         </div>
         <div className="section">
           <label>Password</label>
-          <input className="input" type="password" placeholder="••••••••" />
+          <input className="input" type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
         </div>
+        {error && <div className="card-subtitle" style={{ color: 'var(--color-error)' }}>{error}</div>}
         <div className="section-lg">
-          <Button variant="primary" type="submit">Login</Button>
+          <Button variant="primary" type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</Button>
         </div>
         <p className="text-muted">Don&apos;t have an account? <Link to="/register">Register</Link></p>
       </form>

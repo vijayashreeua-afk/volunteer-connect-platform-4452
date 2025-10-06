@@ -24,18 +24,8 @@ export const THEME = {
   SURFACE: '#ffffff',
   TEXT: '#111827',
 };
-```
 
-Explanation: Create utils/validators.js
-````write file="volunteer-connect-platform-4452/volunteering_system_frontend/src/utils/validators.js"
- /**
-  * PUBLIC_INTERFACE
-  * Simple validator helpers.
-  */
-export function isEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').toLowerCase());
-}
-
-export function isRequired(value) {
-  return value !== null && value !== undefined && String(value).trim().length > 0;
-}
+// PUBLIC_INTERFACE
+export const API = {
+  BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000',
+};

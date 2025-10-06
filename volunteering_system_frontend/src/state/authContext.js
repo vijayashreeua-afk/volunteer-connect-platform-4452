@@ -1,19 +1,27 @@
 import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
+import { authApi } from '../services/authApi';
 
 const AuthContext = createContext(null);
 
 const initialState = {
   token: null,
   user: null,
+  loading: false,
+  error: null,
 };
 
-// Simple reducer placeholder to be expanded as needed
 function authReducer(state, action) {
   switch (action.type) {
-    case 'LOGIN':
-      return { ...state, token: action.payload.token, user: action.payload.user };
+    case 'LOGIN_START':
+      return { ...state, loading: true, error: null };
+    case 'LOGIN_SUCCESS':
+      return { ...state, loading: false, token: action.payload.token, user: action.payload.user };
+    case 'LOGIN_ERROR':
+      return { ...state, loading: false, error: action.payload };
+    case 'ME_SUCCESS':
+      return { ...state, user: action.payload.user ?? action.payload, token: state.token ?? action.payload.token ?? state.token };
     case 'LOGOUT':
-      return { ...state, token: null, user: null };
+      return { token: null, user: null, loading: false, error: null };
     default:
       return state;
   }
@@ -22,12 +30,13 @@ function authReducer(state, action) {
 /**
  * PUBLIC_INTERFACE
  * AuthProvider wraps the app and provides auth state with localStorage persistence.
+ * It also exposes async actions that integrate with backend auth endpoints.
  */
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState, (init) => {
     try {
       const raw = localStorage.getItem('vc_auth');
-      if (raw) return JSON.parse(raw);
+      if (raw) return { ...init, ...JSON.parse(raw), loading: false, error: null };
     } catch {
       // ignore
     }
@@ -36,20 +45,82 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('vc_auth', JSON.stringify(state));
+      localStorage.setItem('vc_auth', JSON.stringify({ token: state.token, user: state.user }));
     } catch {
       // ignore
     }
-  }, [state]);
+  }, [state.token, state.user]);
+
+  // attempt to refresh "me" if token present on mount
+  useEffect(() => {
+    async function hydrate() {
+      if (!state.token) return;
+      try {
+        const me = await authApi.me();
+        dispatch({ type: 'ME_SUCCESS', payload: me });
+      } catch (e) {
+        // if unauthorized, force logout
+        dispatch({ type: 'LOGOUT' });
+      }
+    }
+    hydrate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value = useMemo(() => {
     return {
       ...state,
       isAuthenticated: Boolean(state.token),
       // PUBLIC_INTERFACE
-      login: (data) => dispatch({ type: 'LOGIN', payload: data }),
+      login: async ({ email, password }) => {
+        dispatch({ type: 'LOGIN_START' });
+        try {
+          const res = await authApi.login({ email, password });
+          const token = res?.token ?? res?.accessToken ?? null;
+          const user = res?.user ?? null;
+          if (!token) throw new Error('Missing token in response');
+          dispatch({ type: 'LOGIN_SUCCESS', payload: { token, user } });
+          return { token, user };
+        } catch (err) {
+          dispatch({ type: 'LOGIN_ERROR', payload: err?.message || 'Login failed' });
+          throw err;
+        }
+      },
       // PUBLIC_INTERFACE
-      logout: () => dispatch({ type: 'LOGOUT' }),
+      register: async ({ name, email, password }) => {
+        dispatch({ type: 'LOGIN_START' });
+        try {
+          const res = await authApi.register({ name, email, password });
+          const token = res?.token ?? res?.accessToken ?? null;
+          const user = res?.user ?? res ?? null;
+          // Some backends do not auto-login on register - support both
+          if (token) {
+            dispatch({ type: 'LOGIN_SUCCESS', payload: { token, user } });
+          } else {
+            dispatch({ type: 'LOGIN_ERROR', payload: null });
+          }
+          return res;
+        } catch (err) {
+          dispatch({ type: 'LOGIN_ERROR', payload: err?.message || 'Registration failed' });
+          throw err;
+        }
+      },
+      // PUBLIC_INTERFACE
+      fetchMe: async () => {
+        const me = await authApi.me();
+        dispatch({ type: 'ME_SUCCESS', payload: me });
+        return me;
+      },
+      // PUBLIC_INTERFACE
+      logout: async () => {
+        try { await authApi.logout(); } catch { /* ignore */ }
+        dispatch({ type: 'LOGOUT' });
+      },
+      // PUBLIC_INTERFACE
+      handleAuthError: () => {
+        // To be called when catching ApiError with code AUTH_401 in pages/services
+        dispatch({ type: 'LOGOUT' });
+      },
     };
   }, [state]);
 
@@ -69,68 +140,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
-};
-```
-
-Explanation: Create Theme context with light/dark support
-````write file="volunteer-connect-platform-4452/volunteering_system_frontend/src/state/uiTheme.js"
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-
-const ThemeContext = createContext(null);
-
-/**
- * PUBLIC_INTERFACE
- * ThemeProvider manages light/dark theme with persistence to localStorage and data-theme attribute.
- */
-export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('vc_theme') || 'light';
-    } catch {
-      return 'light';
-    }
-  });
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    try {
-      localStorage.setItem('vc_theme', theme);
-    } catch {
-      // ignore
-    }
-  }, [theme]);
-
-  const value = useMemo(() => ({
-    theme,
-    // PUBLIC_INTERFACE
-    toggleTheme: () => setTheme((t) => (t === 'light' ? 'dark' : 'light')),
-    // PUBLIC_INTERFACE
-    setTheme,
-  }), [theme]);
-
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
-
-/**
- * PUBLIC_INTERFACE
- * useTheme hook to access theme context.
- */
-export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
-}
-```
-
-Explanation: Create services placeholders
-````write file="volunteer-connect-platform-4452/volunteering_system_frontend/src/services/apiClient.js"
- /**
-  * PUBLIC_INTERFACE
-  * apiClient placeholder. In Step 2, this will be replaced with real fetch/axios logic.
-  */
-export const apiClient = {
-  async get(path) { return { ok: true, path, data: null }; },
-  async post(path, body) { return { ok: true, path, body, data: null }; },
-  async put(path, body) { return { ok: true, path, body, data: null }; },
-  async del(path) { return { ok: true, path, data: null }; },
-};
