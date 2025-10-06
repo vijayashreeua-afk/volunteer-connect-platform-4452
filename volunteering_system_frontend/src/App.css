@@ -1,5 +1,6 @@
 /* Ocean Professional Theme Variables */
 :root {
+  /* Core tokens */
   --color-primary: #2563EB;
   --color-primary-600: #1D4ED8;
   --color-secondary: #F59E0B;
@@ -9,10 +10,17 @@
   --color-text: #111827;
   --color-text-muted: #6B7280;
   --color-border: #E5E7EB;
+
+  /* Effects */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
   --shadow-md: 0 4px 6px rgba(0,0,0,0.08);
+
+  /* Radii */
   --radius: 12px;
   --radius-sm: 8px;
+
+  /* Gradient soft background: "from-blue-500/10 to-gray-50" */
+  --gradient-soft: linear-gradient(180deg, rgba(37,99,235,0.10), rgba(249,250,251,1));
 }
 
 [data-theme="dark"] {
@@ -23,6 +31,17 @@
   --color-border: #1F2937;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
   --shadow-md: 0 4px 6px rgba(0,0,0,0.45);
+  --gradient-soft: linear-gradient(180deg, rgba(37,99,235,0.08), rgba(15, 23, 42, 1));
+}
+
+/* Reduced motion: prefer minimal transforms/transitions */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Layout */
@@ -97,7 +116,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  min-height: 64px;
+  padding: 8px 0;
+  gap: 12px;
 }
 
 .brand {
@@ -127,6 +148,10 @@ body {
   gap: 10px;
 }
 
+.nav-links.mobile-hidden {
+  display: none;
+}
+
 .nav-link {
   color: var(--color-text);
   text-decoration: none;
@@ -135,8 +160,10 @@ body {
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-.nav-link:hover {
+.nav-link:hover,
+.nav-link:focus-visible {
   background: rgba(37,99,235,0.08);
+  outline: none;
 }
 
 .nav-link.active {
@@ -150,6 +177,36 @@ body {
   gap: 8px;
 }
 
+/* Mobile menu */
+.menu-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: inline-flex;
+  }
+  .nav-links {
+    display: none;
+  }
+  .nav-links.is-open {
+    display: flex;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 64px;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 16px 16px 16px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+  }
+  [data-theme="dark"] .nav-links.is-open {
+    background: var(--color-surface);
+  }
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -161,7 +218,7 @@ body {
   border: 1px solid transparent;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.06s ease, background 0.2s ease, color 0.2s ease, border 0.2s ease;
+  transition: transform 0.06s ease, background 0.2s ease, color 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
   box-shadow: var(--shadow-sm);
 }
 
@@ -173,9 +230,26 @@ body {
   transform: translateY(0);
 }
 
+/* Focus styles: visible outline for all interactive elements */
+.btn:focus-visible,
+.nav-link:focus-visible,
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible,
+.menu-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+  border-color: var(--color-primary);
+}
+
 .btn-primary {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-600));
   color: white;
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  filter: brightness(0.98);
 }
 
 .btn-secondary {
@@ -204,6 +278,7 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+  gap: 8px;
 }
 
 .card-title {
@@ -214,6 +289,14 @@ body {
 .card-subtitle {
   color: var(--color-text-muted);
   font-size: 0.9rem;
+}
+
+/* Hero or header gradient utility */
+.header-gradient {
+  background: var(--gradient-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
 }
 
 /* Footer */
@@ -253,3 +336,16 @@ body {
 .section { margin: 16px 0; }
 .section-lg { margin: 24px 0; }
 .spacing { height: 12px; }
+
+/* Visually hidden utility for accessibility */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

@@ -63,17 +63,17 @@ export default function Profile() {
       {loading ? <Loader /> : (
         <form onSubmit={onSave}>
           <div className="section">
-            <label>Name</label>
-            <input className="input" name="name" value={form.name} onChange={onChange} placeholder="Your name" />
+            <label htmlFor="profile-name">Name</label>
+            <input id="profile-name" className="input" name="name" value={form.name} onChange={onChange} placeholder="Your name" />
           </div>
           <div className="section">
-            <label>Email</label>
-            <input className="input" name="email" type="email" value={form.email} onChange={onChange} placeholder="you@example.com" />
+            <label htmlFor="profile-email">Email</label>
+            <input id="profile-email" className="input" name="email" type="email" value={form.email} onChange={onChange} placeholder="you@example.com" />
           </div>
           {error && <div className="card-subtitle" style={{ color: 'var(--color-error)' }}>{error}</div>}
           {savedMsg && <div className="card-subtitle">{savedMsg}</div>}
           <div className="section-lg">
-            <Button variant="primary" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+            <Button variant="primary" type="submit" disabled={saving} aria-label="Save profile">{saving ? 'Saving...' : 'Save'}</Button>
           </div>
         </form>
       )}

@@ -11,13 +11,15 @@ export default function Home() {
   const navigate = useNavigate();
   return (
     <div className="grid" style={{ gap: 16 }}>
-      <Card
-        title="Welcome to Volunteer Connect"
-        subtitle="Find opportunities and make an impact"
-        action={<Button variant="primary" onClick={() => navigate('/opportunities')}>Browse Opportunities</Button>}
-      >
-        <p className="text-muted">Ocean Professional theme applied. This is a scaffold page.</p>
-      </Card>
+      <div className="header-gradient">
+        <Card
+          title="Welcome to Volunteer Connect"
+          subtitle="Find opportunities and make an impact"
+          action={<Button variant="primary" onClick={() => navigate('/opportunities')} aria-label="Browse volunteering opportunities">Browse Opportunities</Button>}
+        >
+          <p className="text-muted">Ocean Professional theme applied. This is a scaffold page.</p>
+        </Card>
+      </div>
 
       <div className="grid grid-3">
         <Card title="Discover" subtitle="Explore events near you">

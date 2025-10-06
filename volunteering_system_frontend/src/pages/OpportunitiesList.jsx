@@ -50,7 +50,7 @@ export default function OpportunitiesList() {
             <div className="card-title">Opportunities</div>
             <div className="card-subtitle">Browse available events</div>
           </div>
-          <Button variant="primary" onClick={() => navigate('/create')}>Create Opportunity</Button>
+          <Button variant="primary" onClick={() => navigate('/create')} aria-label="Create a new opportunity">Create Opportunity</Button>
         </div>
         <div className="spacing" />
         {loading && <Loader />}
@@ -71,7 +71,7 @@ export default function OpportunitiesList() {
         <div className="grid grid-3">
           {items.map((it) => (
             <Card key={it.id} title={it.title} subtitle={`${it.category || it.type || 'General'} • ${it.duration || ''}`}>
-              <Button variant="secondary" onClick={() => navigate(`/opportunities/${it.id}`)}>View Details</Button>
+              <Button variant="secondary" onClick={() => navigate(`/opportunities/${it.id}`)} aria-label={`View details for ${it.title}`}>View Details</Button>
             </Card>
           ))}
         </div>

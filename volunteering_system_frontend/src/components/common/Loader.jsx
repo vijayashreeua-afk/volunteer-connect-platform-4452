@@ -16,7 +16,7 @@ export default function Loader() {
   };
 
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }} role="status" aria-live="polite" aria-busy="true">
       <div style={style} aria-label="Loading" />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <span className="text-muted">Loading...</span>

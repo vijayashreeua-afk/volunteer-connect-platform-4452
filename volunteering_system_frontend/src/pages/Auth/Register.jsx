@@ -38,21 +38,21 @@ export default function Register() {
     <Card title="Register" subtitle="Create your account">
       <form onSubmit={onSubmit}>
         <div className="section">
-          <label>Name</label>
-          <input className="input" name="name" value={form.name} onChange={onChange} placeholder="Your name" required />
+          <label htmlFor="reg-name">Name</label>
+          <input id="reg-name" className="input" name="name" value={form.name} onChange={onChange} placeholder="Your name" required />
         </div>
         <div className="section">
-          <label>Email</label>
-          <input className="input" name="email" type="email" value={form.email} onChange={onChange} placeholder="you@example.com" required />
+          <label htmlFor="reg-email">Email</label>
+          <input id="reg-email" className="input" name="email" type="email" value={form.email} onChange={onChange} placeholder="you@example.com" required />
         </div>
         <div className="section">
-          <label>Password</label>
-          <input className="input" name="password" type="password" value={form.password} onChange={onChange} placeholder="••••••••" required />
+          <label htmlFor="reg-password">Password</label>
+          <input id="reg-password" className="input" name="password" type="password" value={form.password} onChange={onChange} placeholder="••••••••" required />
         </div>
         {error && <div className="card-subtitle" style={{ color: 'var(--color-error)' }}>{error}</div>}
         {success && <div className="card-subtitle">Registration successful. You may now log in.</div>}
         <div className="section-lg">
-          <Button variant="primary" type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create Account'}</Button>
+          <Button variant="primary" type="submit" disabled={loading} aria-label="Create account">{loading ? 'Creating...' : 'Create Account'}</Button>
         </div>
         <p className="text-muted">Already have an account? <Link to="/login">Login</Link></p>
       </form>

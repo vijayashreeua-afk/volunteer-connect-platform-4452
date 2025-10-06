@@ -46,16 +46,16 @@ export default function CreateOpportunity() {
       )}
       <form onSubmit={onSave}>
         <div className="section">
-          <label>Title</label>
-          <input className="input" placeholder="Beach Cleanup" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          <label htmlFor="opp-title">Title</label>
+          <input id="opp-title" className="input" placeholder="Beach Cleanup" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
         <div className="section">
-          <label>Description</label>
-          <textarea className="textarea" rows="4" placeholder="Describe the opportunity..." value={description} onChange={(e) => setDescription(e.target.value)} required />
+          <label htmlFor="opp-desc">Description</label>
+          <textarea id="opp-desc" className="textarea" rows="4" placeholder="Describe the opportunity..." value={description} onChange={(e) => setDescription(e.target.value)} required />
         </div>
         <div className="section">
-          <label>Category</label>
-          <select className="select" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <label htmlFor="opp-category">Category</label>
+          <select id="opp-category" className="select" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option>Environment</option>
             <option>Community</option>
             <option>Education</option>
@@ -63,11 +63,11 @@ export default function CreateOpportunity() {
         </div>
         {error && <div className="card-subtitle" style={{ color: 'var(--color-error)' }}>{error}</div>}
         <div className="section-lg">
-          <Button variant="primary" type="submit" disabled={!isAuthenticated || saving}>
+          <Button variant="primary" type="submit" disabled={!isAuthenticated || saving} aria-label="Save opportunity">
             {saving ? <Loader /> : 'Save'}
           </Button>
           <span style={{ marginLeft: 8 }} />
-          <Button variant="secondary" type="button" onClick={() => navigate('/opportunities')} disabled={saving}>Cancel</Button>
+          <Button variant="secondary" type="button" onClick={() => navigate('/opportunities')} disabled={saving} aria-label="Cancel and go back">Cancel</Button>
         </div>
       </form>
     </Card>

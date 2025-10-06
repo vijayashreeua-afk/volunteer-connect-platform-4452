@@ -92,11 +92,11 @@ export default function OpportunityDetails() {
     <Card title={item.title || `Opportunity #${id}`} subtitle={item.category || 'Details'}>
       <p className="text-muted">{item.description || 'No description provided.'}</p>
       <div className="section">
-        <Button variant="primary" disabled={!isAuthenticated || registering} onClick={onRegister}>
+        <Button variant="primary" disabled={!isAuthenticated || registering} onClick={onRegister} aria-label="Register for opportunity">
           {registering ? 'Registering...' : 'Register'}
         </Button>
         <span style={{ marginLeft: 8 }} />
-        <Button variant="secondary" disabled={!isAuthenticated || saving} onClick={onSave}>
+        <Button variant="secondary" disabled={!isAuthenticated || saving} onClick={onSave} aria-label="Save opportunity">
           {saving ? 'Saving...' : 'Save'}
         </Button>
       </div>
