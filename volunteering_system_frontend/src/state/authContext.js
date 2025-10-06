@@ -8,6 +8,7 @@ const initialState = {
   user: null,
   loading: false,
   error: null,
+  hydrated: false, // indicates we tried to restore session
 };
 
 function authReducer(state, action) {
@@ -15,13 +16,15 @@ function authReducer(state, action) {
     case 'LOGIN_START':
       return { ...state, loading: true, error: null };
     case 'LOGIN_SUCCESS':
-      return { ...state, loading: false, token: action.payload.token, user: action.payload.user };
+      return { ...state, loading: false, token: action.payload.token, user: action.payload.user, error: null };
     case 'LOGIN_ERROR':
       return { ...state, loading: false, error: action.payload };
     case 'ME_SUCCESS':
-      return { ...state, user: action.payload.user ?? action.payload, token: state.token ?? action.payload.token ?? state.token };
+      return { ...state, user: action.payload.user ?? action.payload, token: state.token ?? action.payload.token ?? state.token, error: null, hydrated: true };
+    case 'HYDRATE_DONE':
+      return { ...state, hydrated: true };
     case 'LOGOUT':
-      return { token: null, user: null, loading: false, error: null };
+      return { token: null, user: null, loading: false, error: null, hydrated: true };
     default:
       return state;
   }
@@ -30,40 +33,54 @@ function authReducer(state, action) {
 /**
  * PUBLIC_INTERFACE
  * AuthProvider wraps the app and provides auth state with localStorage persistence.
- * It also exposes async actions that integrate with backend auth endpoints.
+ * It initializes by loading token from localStorage and attempts to fetch current user (/auth/me).
+ * On 401, it clears session. Exposes actions that return promises for redirect flows.
  */
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState, (init) => {
     try {
       const raw = localStorage.getItem('vc_auth');
-      if (raw) return { ...init, ...JSON.parse(raw), loading: false, error: null };
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return { ...init, token: parsed?.token ?? null, user: parsed?.user ?? null, loading: false, error: null };
+      }
     } catch {
       // ignore
     }
     return init;
   });
 
+  // Persist token/user
   useEffect(() => {
     try {
       localStorage.setItem('vc_auth', JSON.stringify({ token: state.token, user: state.user }));
     } catch {
-      // ignore
+      // ignore write failures
     }
   }, [state.token, state.user]);
 
-  // attempt to refresh "me" if token present on mount
+  // Hydrate / fetch current user on app load if token exists
   useEffect(() => {
+    let cancelled = false;
     async function hydrate() {
-      if (!state.token) return;
+      if (!state.token) {
+        dispatch({ type: 'HYDRATE_DONE' });
+        return;
+      }
       try {
         const me = await authApi.me();
-        dispatch({ type: 'ME_SUCCESS', payload: me });
+        if (!cancelled) {
+          dispatch({ type: 'ME_SUCCESS', payload: me });
+        }
       } catch (e) {
-        // if unauthorized, force logout
-        dispatch({ type: 'LOGOUT' });
+        // if unauthorized or failure, clear session
+        if (!cancelled) {
+          dispatch({ type: 'LOGOUT' });
+        }
       }
     }
     hydrate();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -80,6 +97,13 @@ export function AuthProvider({ children }) {
           const user = res?.user ?? null;
           if (!token) throw new Error('Missing token in response');
           dispatch({ type: 'LOGIN_SUCCESS', payload: { token, user } });
+          // attempt to fetch current user if not present
+          try {
+            const me = await authApi.me();
+            dispatch({ type: 'ME_SUCCESS', payload: me });
+          } catch {
+            // ignore me failure; session still established
+          }
           return { token, user };
         } catch (err) {
           dispatch({ type: 'LOGIN_ERROR', payload: err?.message || 'Login failed' });
@@ -93,10 +117,16 @@ export function AuthProvider({ children }) {
           const res = await authApi.register({ name, email, password });
           const token = res?.token ?? res?.accessToken ?? null;
           const user = res?.user ?? res ?? null;
-          // Some backends do not auto-login on register - support both
           if (token) {
             dispatch({ type: 'LOGIN_SUCCESS', payload: { token, user } });
+            try {
+              const me = await authApi.me();
+              dispatch({ type: 'ME_SUCCESS', payload: me });
+            } catch {
+              // ignore
+            }
           } else {
+            // registration succeeded but no login; clear loading and set no error
             dispatch({ type: 'LOGIN_ERROR', payload: null });
           }
           return res;
@@ -118,7 +148,7 @@ export function AuthProvider({ children }) {
       },
       // PUBLIC_INTERFACE
       handleAuthError: () => {
-        // To be called when catching ApiError with code AUTH_401 in pages/services
+        // Clear session immediately on 401s
         dispatch({ type: 'LOGOUT' });
       },
     };

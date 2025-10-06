@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../state/authContext';
 
 /**
  * PUBLIC_INTERFACE
  * Register page integrates with AuthContext.register which calls the API.
+ * After success, redirects to intended path or dashboard when auto-logged-in.
  */
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.from || '/dashboard';
   const { register, loading, error } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [success, setSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   const onChange = (e) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -21,13 +25,16 @@ export default function Register() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setSuccess(false);
+    setSuccessMsg(null);
     try {
       const res = await register(form);
       // If token returned, user is logged in; otherwise show success message
       if (res?.token || res?.accessToken) {
-        navigate('/dashboard');
+        setSuccessMsg('Registration successful. Redirecting...');
+        setTimeout(() => navigate(returnTo, { replace: true }), 400);
       } else {
         setSuccess(true);
+        setSuccessMsg('Registration successful. You may now log in.');
       }
     } catch {
       // error displayed from context
@@ -50,11 +57,11 @@ export default function Register() {
           <input id="reg-password" className="input" name="password" type="password" value={form.password} onChange={onChange} placeholder="••••••••" required />
         </div>
         {error && <div className="card-subtitle" style={{ color: 'var(--color-error)' }}>{error}</div>}
-        {success && <div className="card-subtitle">Registration successful. You may now log in.</div>}
+        {successMsg && <div className="card-subtitle">{successMsg}</div>}
         <div className="section-lg">
           <Button variant="primary" type="submit" disabled={loading} aria-label="Create account">{loading ? 'Creating...' : 'Create Account'}</Button>
         </div>
-        <p className="text-muted">Already have an account? <Link to="/login">Login</Link></p>
+        <p className="text-muted">Already have an account? <Link to="/login" state={{ from: returnTo }}>Login</Link></p>
       </form>
     </Card>
   );

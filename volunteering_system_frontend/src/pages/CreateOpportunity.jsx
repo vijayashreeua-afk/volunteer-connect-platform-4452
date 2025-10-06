@@ -10,6 +10,7 @@ import { useAuth } from '../state/authContext';
 /**
  * PUBLIC_INTERFACE
  * Create Opportunity form posting to backend.
+ * On success, shows an inline success message briefly then redirects to details or list.
  */
 export default function CreateOpportunity() {
   const navigate = useNavigate();
@@ -19,16 +20,21 @@ export default function CreateOpportunity() {
   const [category, setCategory] = useState('Environment');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   const onSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    setSuccessMsg(null);
     try {
       const created = await opportunitiesApi.create({ title, description, category });
       const id = created?.id || created?._id;
-      if (id) navigate(`/opportunities/${id}`);
-      else navigate('/opportunities');
+      setSuccessMsg('Opportunity created successfully. Redirecting...');
+      setTimeout(() => {
+        if (id) navigate(`/opportunities/${id}`, { replace: true });
+        else navigate('/opportunities', { replace: true });
+      }, 500);
     } catch (e2) {
       if (e2 instanceof ApiError && e2.code === 'AUTH_401') handleAuthError();
       setError(e2?.message || 'Failed to create opportunity');
@@ -62,6 +68,7 @@ export default function CreateOpportunity() {
           </select>
         </div>
         {error && <div className="card-subtitle" style={{ color: 'var(--color-error)' }}>{error}</div>}
+        {successMsg && <div className="card-subtitle">{successMsg}</div>}
         <div className="section-lg">
           <Button variant="primary" type="submit" disabled={!isAuthenticated || saving} aria-label="Save opportunity">
             {saving ? <Loader /> : 'Save'}

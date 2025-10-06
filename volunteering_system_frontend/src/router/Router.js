@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from 'react-router-dom';
 
 import Home from '../pages/Home';
@@ -19,13 +20,22 @@ import NotFound from '../pages/NotFound';
 import { useAuth } from '../state/authContext';
 
 /**
- * ProtectedRoute placeholder. For now, if not authenticated, navigates to /login,
- * otherwise renders children. Logic can be expanded in next steps.
+ * PUBLIC_INTERFACE
+ * ProtectedRoute checks authentication; if unauthenticated, redirects to /login and
+ * includes a return path in location.state for post-login redirect.
  */
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location.pathname + location.search }}
+      />
+    );
   }
   return children;
 }
