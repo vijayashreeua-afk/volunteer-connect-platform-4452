@@ -5,8 +5,13 @@
   * - Authorization: Bearer <token> header if token available in localStorage (vc_auth.token)
   * - Centralized error handling and JSON parsing
   * - 401 handling: throws error with code 'AUTH_401'
+  *
+  * Additionally supports mock mode when REACT_APP_USE_MOCK === 'true':
+  * - Exports same API surfaces from ./authApi, ./opportunitiesApi, ./profileApi, ./organizationsApi,
+  *   but backed by in-memory mock implementations from ./apiMock.
   */
 const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
+const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true';
 
 // PUBLIC_INTERFACE
 export class ApiError extends Error {
@@ -35,8 +40,8 @@ function getToken() {
 /** Internal: build absolute URL respecting single slash */
 function buildUrl(path) {
   if (!path) return BASE_URL;
-  const base = BASE_URL.replace(/\/+$/, '');
-  const p = String(path).replace(/^\/+/, '');
+  const base = BASE_URL.replace(/\/*$/, '');
+  const p = String(path).replace(/^\/*/, '');
   return `${base}/${p}`;
 }
 
@@ -125,3 +130,30 @@ export const apiClient = {
     return request('DELETE', path, options);
   },
 };
+
+// In mock mode, re-export service facades backed by apiMock so pages can import from their usual modules.
+let exportedAuthApi, exportedOpportunitiesApi, exportedProfileApi, exportedOrganizationsApi;
+if (USE_MOCK) {
+  const mock = require('./apiMock');
+  exportedAuthApi = mock.mockAuthApi;
+  exportedOpportunitiesApi = mock.mockOpportunitiesApi;
+  exportedProfileApi = mock.mockProfileApi;
+  exportedOrganizationsApi = mock.mockOrganizationsApi;
+} else {
+  exportedAuthApi = require('./authApi').authApi;
+  exportedOpportunitiesApi = require('./opportunitiesApi').opportunitiesApi;
+  exportedProfileApi = require('./profileApi').profileApi;
+  exportedOrganizationsApi = require('./organizationsApi').organizationsApi;
+}
+
+// PUBLIC_INTERFACE
+export const authApi = exportedAuthApi;
+// PUBLIC_INTERFACE
+export const opportunitiesApi = exportedOpportunitiesApi;
+// PUBLIC_INTERFACE
+export const profileApi = exportedProfileApi;
+// PUBLIC_INTERFACE
+export const organizationsApi = exportedOrganizationsApi;
+
+// PUBLIC_INTERFACE
+export const __internal = { USE_MOCK };
