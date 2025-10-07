@@ -22,7 +22,8 @@ jest.mock('react-router-dom', () => {
  */
 test('renders app shell with site brand', () => {
   render(<App />);
-  // Prefer a role-based banner region; brand is inside Navbar's banner <header>
-  const navbar = screen.getByRole('banner');
-  expect(within(navbar).getByText(/volunteer connect/i)).toBeInTheDocument();
+  // Make navbar selection unambiguous against multiple banner regions
+  const banners = screen.getAllByRole('banner');
+  const navbar = banners.find(el => within(el).queryByText(/volunteer connect/i));
+  expect(navbar).toBeInTheDocument();
 });
