@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
+import { MemoryRouter } from 'react-router-dom';
 
 /**
  * PUBLIC_INTERFACE
@@ -8,7 +9,11 @@ import App from './App';
  * Asserts on stable Navbar brand text "Volunteer Connect" which is always present on initial load.
  */
 test('renders app shell with site brand', () => {
-  render(<App />);
+  render(
+    <MemoryRouter>
+      <App />
+    </MemoryRouter>
+  );
   const el = screen.getByText(/volunteer connect/i);
   expect(el).toBeInTheDocument();
 });
