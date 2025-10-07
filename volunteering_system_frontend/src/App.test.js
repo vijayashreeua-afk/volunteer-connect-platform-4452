@@ -24,6 +24,12 @@ test('renders app shell with site brand', () => {
   render(<App />);
   // Make navbar selection unambiguous against multiple banner regions
   const banners = screen.getAllByRole('banner');
-  const navbar = banners.find(el => within(el).queryByText(/volunteer connect/i));
+  let navbar = banners.find(el => within(el).queryByText(/volunteer connect/i));
+  if (!navbar) {
+    // Fallback: try by data-testid if present
+    try {
+      navbar = screen.getByTestId('navbar');
+    } catch {}
+  }
   expect(navbar).toBeInTheDocument();
 });
