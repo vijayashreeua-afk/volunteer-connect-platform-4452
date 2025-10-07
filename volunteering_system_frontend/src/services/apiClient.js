@@ -11,7 +11,19 @@
   *   but backed by in-memory mock implementations from ./apiMock.
   */
 const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
-const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true';
+
+/**
+ * Determine mock mode:
+ * - Treat undefined, null, and empty string as "use mock" for preview-friendly defaults.
+ * - Respect explicit falsy values like 'false' or '0'.
+ * - Accept truthy values 'true' or '1' to enable mock explicitly.
+ *
+ * This ensures first-time runs (no .env) default to mocks, while allowing CI/real API runs
+ * to set REACT_APP_USE_MOCK=false and avoid mock mode.
+ */
+const useMockRaw = (process.env.REACT_APP_USE_MOCK ?? '').toString().trim().toLowerCase();
+// Mock when explicitly true/1 OR when empty/omitted.
+const USE_MOCK = useMockRaw === 'true' || useMockRaw === '1' || useMockRaw === '';
 
 // PUBLIC_INTERFACE
 export class ApiError extends Error {
