@@ -1,163 +1,135 @@
 # Volunteer Connect Frontend
 
-This React application provides the user-facing web interface for discovering, creating, and participating in volunteering opportunities. It implements a modern Ocean Professional theme with blue and amber accents, rounded cards, subtle shadows, and responsive layout.
+This React application provides the user-facing web interface for discovering, creating, and participating in volunteering opportunities. It implements a modern Ocean Professional theme with blue and amber accents, rounded cards, subtle shadows, and a responsive layout.
 
-## Project Overview (Ocean Professional Theme)
+## Quick Start (Mock Mode by Default)
 
-The app applies a clean, modern design with a soft gradient backdrop and accessible defaults. Core UI elements are implemented as lightweight React components with minimal dependencies, styled via CSS variables in src/App.css. The layout consists of a sticky top navigation bar, a main content area, and a compact footer. A theme toggler supports light and dark modes with persistence.
+First run uses in-memory mock APIs so no backend is required.
 
-Key highlights:
-- Responsive navigation with protected routes for dashboard, profile, and create opportunity.
-- Centralized authentication state with localStorage persistence and /auth/me bootstrap.
-- Pluggable data layer with real API mode or in-memory mock mode controlled by environment variables.
-
-## Prerequisites and Installation
-
-Before running the app locally, ensure you have:
-- Node.js 16+ and npm 8+ installed
-- A running API backend if you plan to use real API mode (optional; mock mode requires none)
-
-Steps:
-1. Navigate to the frontend directory:
+1) From the project root, go to the frontend:
    - volunteer-connect-platform-4452/volunteering_system_frontend
-2. Install dependencies:
+
+2) Create a .env.local file (optional but recommended) with mock mode enabled:
+   REACT_APP_USE_MOCK=true
+   REACT_APP_API_BASE_URL=http://localhost:4000
+
+3) Install dependencies:
    - npm install
 
-## Available Scripts
+4) Start the app:
+   - npm start
+   The app will be available at http://localhost:3000
 
-The following scripts are available via package.json and react-scripts:
-- npm start: Starts the development server at http://localhost:3000 with automatic reload.
-- npm test: Runs the tests in watch mode using react-scripts.
-- npm run build: Builds a production-optimized bundle into the build directory.
+5) Run the smoke test (optional):
+   - CI=true npm test
+
+Notes:
+- prop-types is already listed in package.json and will be installed by npm install.
+- Environment variables are read at build time; restart the dev server after changing them.
+
+## Prerequisites
+
+- Node.js 16+ and npm 8+
+
+No backend is required for mock mode. If you want to call a real API, provide a live base URL and disable mock mode (details below).
 
 ## Environment Variables
 
-The app supports the following environment variables (Create React App convention using REACT_APP_ prefix):
-- REACT_APP_API_BASE_URL: Base URL of the backend API. Defaults to http://localhost:4000 if not provided.
-- REACT_APP_USE_MOCK: When set to 'true', the app routes all service calls to an in-memory mock implementation instead of a real backend.
+Create React App reads variables prefixed with REACT_APP_ at build time.
 
-Example .env.local for local development:
-REACT_APP_API_BASE_URL=http://localhost:4000
+- REACT_APP_USE_MOCK
+  - Default behavior: If omitted or empty, the app runs in mock mode for an easy first run.
+  - To explicitly enable mock mode: set REACT_APP_USE_MOCK=true
+  - To disable mock mode (use real API): set REACT_APP_USE_MOCK=false
+
+- REACT_APP_API_BASE_URL
+  - Base URL for the backend API when mock mode is off.
+  - Defaults to http://localhost:4000 when not set.
+  - Example: http://localhost:4000
+
+Example .env.local:
 REACT_APP_USE_MOCK=true
+REACT_APP_API_BASE_URL=http://localhost:4000
 
-These values are read at build time by Create React App. After changing them, restart the dev server.
+After changes to .env.local, stop and restart npm start.
 
-## Running with Real API vs Mock Mode
+## Running Modes
 
-You can toggle between real backend mode and mock mode without code changes:
-- Mock Mode (recommended for first run):
-  - Set REACT_APP_USE_MOCK=true.
-  - The services exported from src/services/apiClient.js will point to in-memory mocks in src/services/apiMock.js.
-  - No backend is required; authentication and data are simulated.
+- Mock Mode (default/easiest):
+  - REACT_APP_USE_MOCK=true (or leave unset)
+  - All service calls are handled by in-memory mocks in src/services/apiMock.js
+  - No backend is needed; auth and data are simulated
+
 - Real API Mode:
-  - Set REACT_APP_USE_MOCK to anything other than 'true' (or omit it).
-  - Set REACT_APP_API_BASE_URL to your backend URL, for example http://localhost:4000.
-  - Service modules will use fetch via apiClient to call assumed REST endpoints.
+  - REACT_APP_USE_MOCK=false
+  - Set REACT_APP_API_BASE_URL to your backend URL (e.g., http://localhost:4000)
+  - API calls are performed with fetch in src/services/apiClient.js using the assumed REST endpoints
 
-Note: When switching modes, stop and restart npm start to apply the new environment variables.
+Tip: When switching modes, restart the dev server so new environment values are applied.
 
-## Routing Overview and Protected Routes
+## Available Scripts
 
-The app uses react-router-dom v6 and defines the following routes in src/router/Router.js:
-- /: Home page with introduction and quick access to browse opportunities.
-- /opportunities: List of volunteering opportunities with loading, empty, and error states.
-- /opportunities/:id: Details view for a single opportunity with register and save actions.
-- /create: Protected route to create a new opportunity.
-- /dashboard: Protected route showing upcoming events, saved items, and stats.
-- /profile: Protected route to view and edit the current user profile.
-- /organizations: Public scaffold for organizations list and follow actions.
-- /login: Authentication form for existing users.
-- /register: Registration form for new users.
-- *: 404 page for unknown routes.
+- npm start: Start the development server (http://localhost:3000)
+- npm test: Run tests in watch mode. For CI-style smoke test, use CI=true npm test
+- npm run build: Create a production build
 
-ProtectedRoute in Router.js guards /create, /dashboard, and /profile. If a user is not authenticated, it redirects to /login and includes a return path in location.state for post-login redirection.
+## Ocean Professional Theme
 
-## Authentication Behavior
+The app uses a modern, accessible theme with:
+- Blue primary (#2563EB) and amber secondary (#F59E0B) accents
+- Subtle shadows, rounded corners, and a soft gradient backdrop
+- Light/dark toggle persisted to localStorage (via ThemeProvider)
+- Styles defined primarily in src/App.css with CSS variables
 
-Authentication state is centralized in src/state/authContext.js. The provider:
-- Persists token and basic user info to localStorage under the key vc_auth.
-- On app load, attempts to hydrate session from localStorage and calls authApi.me to bootstrap the current user. If the call fails or returns 401, it clears the session.
-- Exposes login, register, fetchMe, logout, and handleAuthError helpers. Login and register store the token, attempt to fetch /auth/me, and propagate errors to the UI. Logout clears state and storage.
+Layout:
+- Sticky Navbar with main navigation and auth actions
+- Main content area for pages and cards
+- Compact Footer with subtle styling
 
-401 Handling:
-- The shared apiClient throws an ApiError with code AUTH_401 on HTTP 401. Pages catch this and call handleAuthError from the auth context, which clears the session immediately. The ProtectedRoute will then redirect the user to /login.
+## Routes and Pages
 
-Token Usage:
-- apiClient attaches Authorization: Bearer <token> automatically if vc_auth.token is present in localStorage.
+Defined in src/router/Router.js (react-router-dom v6):
 
-## Services and Endpoint Assumptions
+Public:
+- / (Home)
+- /opportunities (Opportunities List)
+- /opportunities/:id (Opportunity Details)
+- /organizations (Organizations)
+- /login (Login)
+- /register (Register)
 
-In real API mode, the app uses the following assumed REST endpoints (replace with actual backend endpoints once available):
-- Auth (src/services/authApi.js):
-  - POST /auth/login
-  - POST /auth/register
-  - GET /auth/me
-  - POST /auth/logout
-  - POST /auth/refresh
-- Opportunities (src/services/opportunitiesApi.js):
-  - GET /opportunities
-  - GET /opportunities/:id
-  - POST /opportunities
-  - PUT /opportunities/:id
-  - DELETE /opportunities/:id
-  - POST /opportunities/:id/register
-  - POST /opportunities/:id/save
-  - DELETE /opportunities/:id/save
-- Profile (src/services/profileApi.js):
-  - GET /profile
-  - PUT /profile
-  - GET /profile/history
-  - GET /profile/saved
-- Organizations (src/services/organizationsApi.js):
-  - GET /organizations
-  - GET /organizations/:id
-  - POST /organizations/:id/follow
-  - DELETE /organizations/:id/follow
+Protected (requires auth):
+- /create (Create Opportunity)
+- /dashboard (Dashboard)
+- /profile (Profile)
 
-When the backend spec becomes available, align these paths, payloads, and response shapes. The UI already tolerates some variance by accepting either arrays or { items: [] } in list responses and checking for token or accessToken fields in auth responses.
+A 404 route (*) renders NotFound for unmatched paths. Protected routes redirect unauthenticated users to /login and preserve the intended return path.
 
-## Mock Mode Usage
+## Authentication and API Basics
 
-When REACT_APP_USE_MOCK='true', apiClient re-exports service facades backed by src/services/apiMock.js. The mocks:
-- Provide in-memory lists for opportunities and organizations.
-- Simulate auth, issuing and checking a mock token for protected actions.
-- Add small delays to mimic network latency and throw ApiError with AUTH_401 when appropriate.
+- Auth state is managed in src/state/authContext.js, persisted in localStorage (vc_auth)
+- apiClient (src/services/apiClient.js) attaches Authorization: Bearer <token> when available
+- On HTTP 401, apiClient throws an ApiError with code AUTH_401; the app clears the session and redirects as needed
+- Service modules are in src/services/*.js and switch automatically between mock and real APIs based on REACT_APP_USE_MOCK
 
-This allows end-to-end navigation and interactions without any backend. It is ideal for UI development, demos, and CI checks.
+## Service Endpoint Assumptions (Real API Mode)
 
-## Development Tips and Folder Structure Summary
+Until a backend spec is available, the app assumes typical REST paths:
+- Auth: /auth/login, /auth/register, /auth/me, /auth/logout, /auth/refresh
+- Opportunities: /opportunities, /opportunities/:id, /opportunities/:id/register, /opportunities/:id/save
+- Profile: /profile, /profile/history, /profile/saved
+- Organizations: /organizations, /organizations/:id, /organizations/:id/follow
 
-Key folders:
-- src/router: Router.js defines routes and ProtectedRoute.
-- src/state: Auth and theme providers with hooks.
-- src/services: apiClient, real service facades, and apiMock for mock mode.
-- src/pages: Page-level components for each route, implementing data fetching and user actions.
-- src/components: Common UI pieces (Button, Card, Loader, EmptyState) and layout (Navbar, Footer).
-- src/utils: Constants and simple validators.
+Adjust src/services/*.js to match your backend once finalized.
 
-Tips:
-- After changing environment variables, restart the dev server.
-- For accessibility, interactive elements have visible focus states and ARIA attributes. Keep these conventions when adding features.
-- To adjust the theme, edit CSS variables and utilities in src/App.css. Theme state is toggled through the useTheme hook.
-- If you integrate a real backend, start by updating REACT_APP_API_BASE_URL and verifying /auth/me returns the current user. The app’s bootstrap relies on this for session restoration.
+## Folder Structure Highlights
 
-## Quick Start
+- src/router: Routing and ProtectedRoute
+- src/state: Auth and Theme providers/hooks
+- src/services: apiClient, mock and real service facades
+- src/pages: Page-level components
+- src/components: UI building blocks (Button, Card, Loader, EmptyState) and layout (Navbar, Footer)
+- src/utils: Constants and validators
 
-1. Copy the example environment to .env.local (optional):
-   - REACT_APP_API_BASE_URL=http://localhost:4000
-   - REACT_APP_USE_MOCK=true
-2. Install and run:
-   - npm install
-   - npm start
-3. Open http://localhost:3000 and explore:
-   - Public pages: Home, Opportunities, Organizations, Login, Register
-   - Auth-only pages: Create, Dashboard, Profile
-
-## Notes on Replacing Placeholder Endpoints
-
-The current endpoints are placeholders aligned with common REST patterns. Once the backend contract is finalized:
-- Update paths and payloads in src/services/*.js to match the API spec.
-- Ensure auth responses include a token or accessToken. The app reads either and stores it in vc_auth.
-- Ensure an /auth/me equivalent exists; the app relies on this to populate user state at startup.
-- Review error payloads and, if needed, map them to user-friendly messages in page components.
-
+Accessibility:
+- Visible focus styles, ARIA attributes, and keyboard-friendly interactions are included by default. Preserve these patterns when adding features.
