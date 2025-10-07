@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { within } from '@testing-library/react';
 import App from './App';
 
 // Mock react-router-dom components/hooks that require Router context
@@ -21,7 +22,7 @@ jest.mock('react-router-dom', () => {
  */
 test('renders app shell with site brand', () => {
   render(<App />);
-  // Brand can be wrapped/fragmented, so match case-insensitively and partially
-  const el = screen.getByText(/volunteer connect/i);
-  expect(el).toBeInTheDocument();
+  // Prefer a role-based banner region; brand is inside Navbar's banner <header>
+  const navbar = screen.getByRole('banner');
+  expect(within(navbar).getByText(/volunteer connect/i)).toBeInTheDocument();
 });
