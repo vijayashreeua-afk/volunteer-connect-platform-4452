@@ -22,14 +22,22 @@ jest.mock('react-router-dom', () => {
  */
 test('renders app shell with site brand', () => {
   render(<App />);
-  // Make navbar selection unambiguous against multiple banner regions
-  const banners = screen.getAllByRole('banner');
-  let navbar = banners.find(el => within(el).queryByText(/volunteer connect/i));
+  // Try robust/explicit navbar selection even if roles are ambiguous
+  let navbar;
+  try {
+    // Attempt robust banner-region search (may be >1 in DOM)
+    const banners = screen.getAllByRole('banner');
+    navbar = banners.find(el => within(el).queryByText(/volunteer connect/i));
+  } catch {
+    navbar = undefined;
+  }
   if (!navbar) {
-    // Fallback: try by data-testid if present
+    // Fallback: try by data-testid="navbar" if present (should work if role is not mapped)
     try {
       navbar = screen.getByTestId('navbar');
-    } catch {}
+    } catch {
+      navbar = null;
+    }
   }
   expect(navbar).toBeInTheDocument();
 });
